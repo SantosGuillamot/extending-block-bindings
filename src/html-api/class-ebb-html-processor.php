@@ -6430,6 +6430,113 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 		}
 	}
 
+	/**
+	 * Set the inner HTML of the currrent node.
+	 *
+	 * @todo This method needs to check if the inner HTML can leak out of the current node.
+	 *
+	 * @param string $html The inner HTML to set.
+	 *
+	 * @return bool True if the inner HTML was set, false otherwise.
+	 */
+	public function set_inner_html( string $html ): bool {
+		if ( $this->is_virtual() ) {
+			return false;
+		}
+
+		if ( $this->get_token_type() !== '#tag' ) {
+			return false;
+		}
+
+		if ( $this->is_tag_closer() ) {
+			return false;
+		}
+
+		if ( ! $this->expects_closer() ) {
+			return false;
+		}
+
+		if ( '' !== $html ) {
+			$fragment_parser = $this->create_fragment_at_current_node( $html );
+			if ( null === $fragment_parser ) {
+				return false;
+			}
+
+			try {
+				$html = $fragment_parser->serialize();
+			} catch ( Exception $e ) {
+				return false;
+			}
+		}
+
+		// @todo apply modifications if there are any???
+		if ( ! $this->set_bookmark( 'SET_INNER_HTML: opener' ) ) {
+			return false;
+		}
+
+		if ( ! $this->proceed_to_matching_closer() ) {
+			$this->seek( 'SET_INNER_HTML: opener' );
+			return false;
+		}
+
+		if ( ! $this->set_bookmark( 'SET_INNER_HTML: closer' ) ) {
+			return false;
+		}
+
+		$inner_html_start  = $this->bookmarks['_SET_INNER_HTML: opener']->start + $this->bookmarks['_SET_INNER_HTML: opener']->length;
+		$inner_html_length = $this->bookmarks['_SET_INNER_HTML: closer']->start - $inner_html_start;
+
+		$this->lexical_updates[] = new WP_HTML_Text_Replacement(
+			$inner_html_start,
+			$inner_html_length,
+			$html
+		);
+
+		$this->seek( 'SET_INNER_HTML: opener' );
+		$this->release_bookmark( 'SET_INNER_HTML: opener' );
+		$this->release_bookmark( 'SET_INNER_HTML: closer' );
+
+		// @todo check for whether that html will make a mess!
+		// Will it break out of tags?
+		return true;
+	}
+
+	/**
+	 * @todo check for self-closing foreign content tags
+	 * @todo document
+	 */
+	public function proceed_to_matching_closer(): bool {
+		$tag_name = $this->get_tag();
+
+		if ( null === $tag_name ) {
+			return false;
+		}
+
+		if ( $this->is_tag_closer() ) {
+			return false;
+		}
+
+		if ( ! $this->expects_closer() ) {
+			return false;
+		}
+
+		$breadcrumbs = $this->get_breadcrumbs();
+		array_pop( $breadcrumbs );
+
+		// @todo Can't use these queries together
+		while ( $this->next_tag(
+			array(
+				'tag_name'    => $this->get_tag(),
+				'tag_closers' => 'visit',
+			)
+		) ) {
+			if ( $this->get_breadcrumbs() === $breadcrumbs ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/*
 	 * Constants that would pollute the top of the class if they were found there.
 	 */
