@@ -1,0 +1,21 @@
+{
+	"name": "extending-block-bindings",
+	"version": "0.1.0",
+	"author": "Automattic",
+	"license": "GPL-3.0-or-later",
+	"scripts": {
+		"build": "wp-scripts build --experimental-modules",
+		"start": "wp-scripts start --experimental-modules",
+		"dev": "npm start",
+		"format:php": "wp-env run --env-cwd='wp-content/plugins/woo-demo' cli composer run-script format",
+		"lint:php": "wp-env run --env-cwd='wp-content/plugins/woo-demo' cli composer run-script lint",
+		"wp-env": "wp-env"
+	},
+	"devDependencies": {
+		"@wordpress/env": "^10.0.0",
+		"@wordpress/prettier-config": "^4.0.0",
+		"@wordpress/scripts": "^27.3.0",
+		"archiver": "^7.0.0",
+		"prettier": "npm:wp-prettier@3.0.3"
+	}
+}
