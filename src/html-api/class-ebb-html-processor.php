@@ -10,10 +10,10 @@
  * Fork of the core class used to safely parse and modify an HTML document, with some experimental new methods.
  * https://github.com/WordPress/wordpress-develop/blob/trunk/src/wp-includes/html-api/class-wp-html-processor.php
  *
- * @see WP_HTML_Tag_Processor
+ * @see EBB_HTML_Tag_Processor
  * @see https://html.spec.whatwg.org/
  */
-class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
+class EBB_HTML_Processor extends EBB_HTML_Tag_Processor {
 	/**
 	 * The maximum number of bookmarks allowed to exist at any given time.
 	 *
@@ -48,7 +48,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * @since 6.4.0
 	 *
-	 * @see WP_HTML_Processor::$release_internal_bookmark_on_destruct
+	 * @see EBB_HTML_Processor::$release_internal_bookmark_on_destruct
 	 *
 	 * @var int
 	 */
@@ -229,7 +229,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * @since 6.4.0
 	 *
-	 * @see WP_HTML_Processor::create_fragment()
+	 * @see EBB_HTML_Processor::create_fragment()
 	 *
 	 * @param string      $html                                  HTML to process.
 	 * @param string|null $use_the_static_create_methods_instead This constructor should not be called manually.
@@ -241,9 +241,9 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 			_doing_it_wrong(
 				__METHOD__,
 				sprintf(
-					/* translators: %s: WP_HTML_Processor::create_fragment(). */
+					/* translators: %s: EBB_HTML_Processor::create_fragment(). */
 					__( 'Call %s to create an HTML Processor instead of calling the constructor directly.' ),
-					'<code>WP_HTML_Processor::create_fragment()</code>'
+					'<code>EBB_HTML_Processor::create_fragment()</code>'
 				),
 				'6.4.0'
 			);
@@ -293,7 +293,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Creates a fragment processor at the current node.
 	 *
 	 * HTML Fragment parsing always happens with a context node. HTML Fragment Processors can be
-	 * instantiated with a `BODY` context node via `WP_HTML_Processor::create_fragment( $html )`.
+	 * instantiated with a `BODY` context node via `EBB_HTML_Processor::create_fragment( $html )`.
 	 *
 	 * The context node may impact how a fragment of HTML is parsed. For example, consider the HTML
 	 * fragment `<td />Inside TD?</td>`.
@@ -480,9 +480,9 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example
 	 *
-	 *     $processor = WP_HTML_Processor::create_fragment( '<template><strong><button><em><p><em>' );
+	 *     $processor = EBB_HTML_Processor::create_fragment( '<template><strong><button><em><p><em>' );
 	 *     false === $processor->next_tag();
-	 *     WP_HTML_Processor::ERROR_UNSUPPORTED === $processor->get_last_error();
+	 *     EBB_HTML_Processor::ERROR_UNSUPPORTED === $processor->get_last_error();
 	 *
 	 * @since 6.4.0
 	 *
@@ -509,6 +509,45 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	public function get_unsupported_exception() {
 		return $this->unsupported_exception;
 	}
+
+	/**
+	 * Use a selector to advance.
+	 *
+	 * @param string $selectors
+	 * @return Generator<void>|null
+	 */
+	public function select_all( string $selectors ): ?Generator {
+		$select = WP_CSS_Selector_List::from_selectors( $selectors );
+		if ( null === $select ) {
+			return null;
+		}
+
+		while ( $this->next_tag() ) {
+			if ( $select->matches( $this ) ) {
+				yield;
+			}
+		}
+	}
+
+	/**
+	 * Select the next matching element.
+	 *
+	 * If iterating through matching elements, use `select_all` instead.
+	 *
+	 * @param string $selectors
+	 * @return bool|null
+	 */
+	public function select( string $selectors ) {
+		$selection = $this->select_all( $selectors );
+		if ( null === $selection ) {
+			return null;
+		}
+		foreach ( $selection as $_ ) {
+			return true;
+		}
+		return false;
+	}
+
 
 	/**
 	 * Finds the next tag matching the $query.
@@ -619,7 +658,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * This doesn't currently have a way to represent non-tags and doesn't process
 	 * semantic rules for text nodes. For access to the raw tokens consider using
-	 * WP_HTML_Tag_Processor instead.
+	 * EBB_HTML_Tag_Processor instead.
 	 *
 	 * @since 6.5.0 Added for internal support; do not use.
 	 * @since 6.7.1 Refactored so subclasses may extend.
@@ -636,12 +675,12 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * This doesn't currently have a way to represent non-tags and doesn't process
 	 * semantic rules for text nodes. For access to the raw tokens consider using
-	 * WP_HTML_Tag_Processor instead.
+	 * EBB_HTML_Tag_Processor instead.
 	 *
 	 * Note that this method may call itself recursively. This is why it is not
-	 * implemented as {@see WP_HTML_Processor::next_token()}, which instead calls
-	 * this method similarly to how {@see WP_HTML_Tag_Processor::next_token()}
-	 * calls the {@see WP_HTML_Tag_Processor::base_class_next_token()} method.
+	 * implemented as {@see EBB_HTML_Processor::next_token()}, which instead calls
+	 * this method similarly to how {@see EBB_HTML_Tag_Processor::next_token()}
+	 * calls the {@see EBB_HTML_Tag_Processor::base_class_next_token()} method.
 	 *
 	 * @since 6.7.1 Added for internal support.
 	 *
@@ -712,7 +751,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     $p = WP_HTML_Processor::create_fragment( '<div></div>' );
+	 *     $p = EBB_HTML_Processor::create_fragment( '<div></div>' );
 	 *     $p->next_tag( array( 'tag_name' => 'div', 'tag_closers' => 'visit' ) );
 	 *     $p->is_tag_closer() === false;
 	 *
@@ -756,7 +795,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     $processor = WP_HTML_Processor::create_fragment( '<div><span><figure><img></figure></span></div>' );
+	 *     $processor = EBB_HTML_Processor::create_fragment( '<div><span><figure><img></figure></span></div>' );
 	 *     $processor->next_tag( 'img' );
 	 *     true  === $processor->matches_breadcrumbs( array( 'figure', 'img' ) );
 	 *     true  === $processor->matches_breadcrumbs( array( 'span', 'figure', 'img' ) );
@@ -877,22 +916,22 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 
 		if ( self::PROCESS_NEXT_NODE === $node_to_process ) {
 			parent::next_token();
-			if ( WP_HTML_Tag_Processor::STATE_TEXT_NODE === $this->parser_state ) {
+			if ( EBB_HTML_Tag_Processor::STATE_TEXT_NODE === $this->parser_state ) {
 				parent::subdivide_text_appropriately();
 			}
 		}
 
 		// Finish stepping when there are no more tokens in the document.
 		if (
-			WP_HTML_Tag_Processor::STATE_INCOMPLETE_INPUT === $this->parser_state ||
-			WP_HTML_Tag_Processor::STATE_COMPLETE === $this->parser_state
+			EBB_HTML_Tag_Processor::STATE_INCOMPLETE_INPUT === $this->parser_state ||
+			EBB_HTML_Tag_Processor::STATE_COMPLETE === $this->parser_state
 		) {
 			return false;
 		}
 
 		$adjusted_current_node = $this->get_adjusted_current_node();
 		$is_closer             = $this->is_tag_closer();
-		$is_start_tag          = WP_HTML_Tag_Processor::STATE_MATCHED_TAG === $this->parser_state && ! $is_closer;
+		$is_start_tag          = EBB_HTML_Tag_Processor::STATE_MATCHED_TAG === $this->parser_state && ! $is_closer;
 		$token_name            = $this->get_token_name();
 
 		if ( self::REPROCESS_CURRENT_NODE !== $node_to_process ) {
@@ -1018,7 +1057,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     $processor = WP_HTML_Processor::create_fragment( '<p><strong><em><img></em></strong></p>' );
+	 *     $processor = EBB_HTML_Processor::create_fragment( '<p><strong><em><img></em></strong></p>' );
 	 *     $processor->next_tag( 'IMG' );
 	 *     $processor->get_breadcrumbs() === array( 'HTML', 'BODY', 'P', 'STRONG', 'EM', 'IMG' );
 	 *
@@ -1035,7 +1074,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     $processor = WP_HTML_Processor::create_fragment( '<div><p></p></div>' );
+	 *     $processor = EBB_HTML_Processor::create_fragment( '<div><p></p></div>' );
 	 *     // The processor starts in the BODY context, meaning it has depth from the start: HTML > BODY.
 	 *     2 === $processor->get_current_depth();
 	 *
@@ -1064,8 +1103,8 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * This method assumes that the given HTML snippet is found in BODY context.
 	 * For normalizing full documents or fragments found in other contexts, create
-	 * a new processor using {@see WP_HTML_Processor::create_fragment} or
-	 * {@see WP_HTML_Processor::create_full_parser} and call {@see WP_HTML_Processor::serialize}
+	 * a new processor using {@see EBB_HTML_Processor::create_fragment} or
+	 * {@see EBB_HTML_Processor::create_full_parser} and call {@see EBB_HTML_Processor::serialize}
 	 * on the created instances.
 	 *
 	 * Many aspects of an input HTML fragment may be changed during normalization.
@@ -1082,13 +1121,13 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     echo WP_HTML_Processor::normalize( '<a href=#anchor v=5 href="/" enabled>One</a another v=5><!--' );
+	 *     echo EBB_HTML_Processor::normalize( '<a href=#anchor v=5 href="/" enabled>One</a another v=5><!--' );
 	 *     // <a href="#anchor" v="5" enabled>One</a>
 	 *
-	 *     echo WP_HTML_Processor::normalize( '<div></p>fun<table><td>cell</div>' );
+	 *     echo EBB_HTML_Processor::normalize( '<div></p>fun<table><td>cell</div>' );
 	 *     // <div><p></p>fun<table><tbody><tr><td>cell</td></tr></tbody></table></div>
 	 *
-	 *     echo WP_HTML_Processor::normalize( '<![CDATA[invalid comment]]> syntax < <> "oddities"' );
+	 *     echo EBB_HTML_Processor::normalize( '<![CDATA[invalid comment]]> syntax < <> "oddities"' );
 	 *     // <!--[CDATA[invalid comment]]--> syntax &lt; &lt;&gt; &quot;oddities&quot;
 	 *
 	 * @since 6.7.0
@@ -1104,7 +1143,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	/**
 	 * Returns normalized HTML for a fragment by serializing it.
 	 *
-	 * This differs from {@see WP_HTML_Processor::normalize} in that it starts with
+	 * This differs from {@see EBB_HTML_Processor::normalize} in that it starts with
 	 * a specific HTML Processor, which _must_ not have already started scanning;
 	 * it must be in the initial ready state and will be in the completed state once
 	 * serialization is complete.
@@ -1123,15 +1162,15 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     $processor = WP_HTML_Processor::create_fragment( '<a href=#anchor v=5 href="/" enabled>One</a another v=5><!--' );
+	 *     $processor = EBB_HTML_Processor::create_fragment( '<a href=#anchor v=5 href="/" enabled>One</a another v=5><!--' );
 	 *     echo $processor->serialize();
 	 *     // <a href="#anchor" v="5" enabled>One</a>
 	 *
-	 *     $processor = WP_HTML_Processor::create_fragment( '<div></p>fun<table><td>cell</div>' );
+	 *     $processor = EBB_HTML_Processor::create_fragment( '<div></p>fun<table><td>cell</div>' );
 	 *     echo $processor->serialize();
 	 *     // <div><p></p>fun<table><tbody><tr><td>cell</td></tr></tbody></table></div>
 	 *
-	 *     $processor = WP_HTML_Processor::create_fragment( '<![CDATA[invalid comment]]> syntax < <> "oddities"' );
+	 *     $processor = EBB_HTML_Processor::create_fragment( '<![CDATA[invalid comment]]> syntax < <> "oddities"' );
 	 *     echo $processor->serialize();
 	 *     // <!--[CDATA[invalid comment]]--> syntax &lt; &lt;&gt; &quot;oddities&quot;
 	 *
@@ -1141,7 +1180,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *                     or `null` if unable to generate serialization.
 	 */
 	public function serialize(): ?string {
-		if ( WP_HTML_Tag_Processor::STATE_READY !== $this->parser_state ) {
+		if ( EBB_HTML_Tag_Processor::STATE_READY !== $this->parser_state ) {
 			wp_trigger_error(
 				__METHOD__,
 				'An HTML Processor which has already started processing cannot serialize its contents. Serialize immediately after creating the instance.',
@@ -1296,14 +1335,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'initial' insertion mode.
 	 *
 	 * This internal function performs the 'initial' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#the-initial-insertion-mode
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -1343,7 +1382,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 			case 'html':
 				$doctype = $this->get_doctype_info();
 				if ( null !== $doctype && 'quirks' === $doctype->indicated_compatability_mode ) {
-					$this->compat_mode = WP_HTML_Tag_Processor::QUIRKS_MODE;
+					$this->compat_mode = EBB_HTML_Tag_Processor::QUIRKS_MODE;
 				}
 
 				/*
@@ -1358,7 +1397,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 		 * > Anything else
 		 */
 		initial_anything_else:
-		$this->compat_mode           = WP_HTML_Tag_Processor::QUIRKS_MODE;
+		$this->compat_mode           = EBB_HTML_Tag_Processor::QUIRKS_MODE;
 		$this->state->insertion_mode = WP_HTML_Processor_State::INSERTION_MODE_BEFORE_HTML;
 		return $this->step( self::REPROCESS_CURRENT_NODE );
 	}
@@ -1367,14 +1406,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'before html' insertion mode.
 	 *
 	 * This internal function performs the 'before html' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#the-before-html-insertion-mode
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -1464,14 +1503,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'before head' insertion mode.
 	 *
 	 * This internal function performs the 'before head' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#the-before-head-insertion-mode
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -1561,14 +1600,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in head' insertion mode.
 	 *
 	 * This internal function performs the 'in head' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inhead
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -1779,14 +1818,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in head noscript' insertion mode.
 	 *
 	 * This internal function performs the 'in head noscript' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-inheadnoscript
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -1882,14 +1921,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'after head' insertion mode.
 	 *
 	 * This internal function performs the 'after head' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#the-after-head-insertion-mode
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -2026,14 +2065,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in body' insertion mode.
 	 *
 	 * This internal function performs the 'in body' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.4.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-inbody
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -2719,7 +2758,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 				 * > has a p element in button scope, then close a p element.
 				 */
 				if (
-					WP_HTML_Tag_Processor::QUIRKS_MODE !== $this->compat_mode &&
+					EBB_HTML_Tag_Processor::QUIRKS_MODE !== $this->compat_mode &&
 					$this->state->stack_of_open_elements->has_p_in_button_scope()
 				) {
 					$this->close_a_p_element();
@@ -3051,14 +3090,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in table' insertion mode.
 	 *
 	 * This internal function performs the 'in table' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-intable
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -3307,14 +3346,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in table text' insertion mode.
 	 *
 	 * This internal function performs the 'in table text' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-intabletext
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -3326,14 +3365,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in caption' insertion mode.
 	 *
 	 * This internal function performs the 'in caption' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-incaption
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -3410,14 +3449,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in column group' insertion mode.
 	 *
 	 * This internal function performs the 'in column group' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-incolgroup
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -3517,14 +3556,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in table body' insertion mode.
 	 *
 	 * This internal function performs the 'in table body' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-intbody
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -3620,14 +3659,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in row' insertion mode.
 	 *
 	 * This internal function performs the 'in row' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-intr
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -3730,14 +3769,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in cell' insertion mode.
 	 *
 	 * This internal function performs the 'in cell' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-intd
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -3834,14 +3873,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in select' insertion mode.
 	 *
 	 * This internal function performs the 'in select' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inselect
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -4009,14 +4048,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in select in table' insertion mode.
 	 *
 	 * This internal function performs the 'in select in table' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-inselectintable
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -4073,14 +4112,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in template' insertion mode.
 	 *
 	 * This internal function performs the 'in template' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-intemplate
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -4202,14 +4241,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'after body' insertion mode.
 	 *
 	 * This internal function performs the 'after body' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-afterbody
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -4291,14 +4330,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in frameset' insertion mode.
 	 *
 	 * This internal function performs the 'in frameset' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-inframeset
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -4410,14 +4449,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'after frameset' insertion mode.
 	 *
 	 * This internal function performs the 'after frameset' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-afterframeset
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -4495,14 +4534,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'after after body' insertion mode.
 	 *
 	 * This internal function performs the 'after after body' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#the-after-after-body-insertion-mode
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -4558,14 +4597,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'after after frameset' insertion mode.
 	 *
 	 * This internal function performs the 'after after frameset' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#the-after-after-frameset-insertion-mode
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -4626,14 +4665,14 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * Parses next element in the 'in foreign content' insertion mode.
 	 *
 	 * This internal function performs the 'in foreign content' insertion mode
-	 * logic for the generalized WP_HTML_Processor::step() function.
+	 * logic for the generalized EBB_HTML_Processor::step() function.
 	 *
 	 * @since 6.7.0 Stub implementation.
 	 *
 	 * @throws WP_HTML_Unsupported_Exception When encountering unsupported HTML input.
 	 *
 	 * @see https://html.spec.whatwg.org/#parsing-main-inforeign
-	 * @see WP_HTML_Processor::step
+	 * @see EBB_HTML_Processor::step
 	 *
 	 * @return bool Whether an element was found.
 	 */
@@ -4991,7 +5030,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     $processor = new WP_HTML_Tag_Processor( '<div class="test">Test</div>' );
+	 *     $processor = new EBB_HTML_Tag_Processor( '<div class="test">Test</div>' );
 	 *     $processor->next_tag() === true;
 	 *     $processor->get_tag() === 'DIV';
 	 *
@@ -5120,7 +5159,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     $p = WP_HTML_Processor::create_fragment( '<div enabled class="test" data-test-id="14">Test</div>' );
+	 *     $p = EBB_HTML_Processor::create_fragment( '<div enabled class="test" data-test-id="14">Test</div>' );
 	 *     $p->next_token() === true;
 	 *     $p->get_attribute( 'data-test-id' ) === '14';
 	 *     $p->get_attribute( 'enabled' ) === true;
@@ -5181,7 +5220,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     $p = new WP_HTML_Tag_Processor( '<div data-ENABLED class="test" DATA-test-id="14">Test</div>' );
+	 *     $p = new EBB_HTML_Tag_Processor( '<div data-ENABLED class="test" DATA-test-id="14">Test</div>' );
 	 *     $p->next_tag( array( 'class_name' => 'test' ) ) === true;
 	 *     $p->get_attribute_names_with_prefix( 'data-' ) === array( 'data-enabled', 'data-test-id' );
 	 *
@@ -5246,7 +5285,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * Example:
 	 *
-	 *     $p = WP_HTML_Processor::create_fragment( "<div class='free &lt;egg&lt;\tlang-en'>" );
+	 *     $p = EBB_HTML_Processor::create_fragment( "<div class='free &lt;egg&lt;\tlang-en'>" );
 	 *     $p->next_tag();
 	 *     foreach ( $p->class_list() as $class_name ) {
 	 *         echo "{$class_name} ";
@@ -5501,7 +5540,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *                                 ^^^^
 	 *                                 want to note this last item
 	 *
-	 *     $p = new WP_HTML_Tag_Processor( $html );
+	 *     $p = new EBB_HTML_Tag_Processor( $html );
 	 *     $in_list = false;
 	 *     while ( $p->next_tag( array( 'tag_closers' => $in_list ? 'visit' : 'skip' ) ) ) {
 	 *         if ( 'UL' === $p->get_tag() ) {
@@ -5639,7 +5678,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 * @since 6.4.0
 	 * @since 6.7.0 Full spec support.
 	 *
-	 * @see WP_HTML_Processor::generate_implied_end_tags
+	 * @see EBB_HTML_Processor::generate_implied_end_tags
 	 * @see https://html.spec.whatwg.org/#generate-implied-end-tags
 	 */
 	private function generate_implied_end_tags_thoroughly(): void {
@@ -6590,7 +6629,7 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	/**
 	 * Unlock code that must be passed into the constructor to create this class.
 	 *
-	 * This class extends the WP_HTML_Tag_Processor, which has a public class
+	 * This class extends the EBB_HTML_Tag_Processor, which has a public class
 	 * constructor. Therefore, it's not possible to have a private constructor here.
 	 *
 	 * This unlock code is used to ensure that anyone calling the constructor is
@@ -6598,5 +6637,5 @@ class EBB_HTML_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * @access private
 	 */
-	const CONSTRUCTOR_UNLOCK_CODE = 'Use WP_HTML_Processor::create_fragment() instead of calling the class constructor directly.';
+	const CONSTRUCTOR_UNLOCK_CODE = 'Use EBB_HTML_Processor::create_fragment() instead of calling the class constructor directly.';
 }
