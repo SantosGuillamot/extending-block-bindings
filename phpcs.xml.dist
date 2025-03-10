@@ -33,7 +33,7 @@
 	<arg name="extensions" value="php"/>
 
 	<file>./ebb.php</file>
-	<file>./src</file>
+	<file>./lib</file>
 
 	<!-- Exclude generated files -->
 	<exclude-pattern>./build</exclude-pattern>
