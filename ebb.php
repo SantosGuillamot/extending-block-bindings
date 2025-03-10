@@ -12,3 +12,4 @@
  */
 
 require 'lib/server-processing.php';
+require 'lib/register-fields.php';
