@@ -1,0 +1,4 @@
+/* TODO: Find a better way to disable this. */
+.block-editor-bindings__panel {
+	display: none !important;
+}

@@ -11,5 +11,6 @@
  * Text Domain:       ebb
  */
 
-require 'lib/server-processing.php';
+require 'lib/enqueue-assets.php';
 require 'lib/register-fields.php';
+require 'lib/server-processing.php';
