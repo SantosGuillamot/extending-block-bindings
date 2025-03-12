@@ -10,5 +10,11 @@ function enqueue_ebb_editor_scripts() {
 		array(),
 		$assets['version'],
 	);
+	wp_enqueue_script(
+		'ebb-editor-scripts',
+		plugin_dir_url( __DIR__ ) . 'build/index.js',
+		$assets['dependencies'],
+		$assets['version'],
+	);
 }
 add_action( 'enqueue_block_editor_assets', 'enqueue_ebb_editor_scripts' );
