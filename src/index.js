@@ -25,7 +25,8 @@ import {
 	useViewportMatch,
 } from '@wordpress/compose';
 import { useSelect } from '@wordpress/data';
-import { useState } from '@wordpress/element';
+import { DataViews, filterSortAndPaginate } from '@wordpress/dataviews/wp';
+import { useMemo, useState } from '@wordpress/element';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import { __dangerousOptInToUnstableAPIsOnlyForCoreModules } from '@wordpress/private-apis';
@@ -89,9 +90,74 @@ const useToolsPanelDropdownMenuProps = () => {
 		: {};
 };
 
-function DataViewsModal( { sourceName, fieldsList } ) {
-	console.log( 'modal' );
-	return <span>Dataviews</span>;
+function DataViewsModal( { clientId, attribute } ) {
+	const { updateBlockBindings } = useBlockBindingsUtils( clientId );
+	const defaultLayouts = {
+		table: {
+			layout: {
+				primaryField: 'label',
+				styles: {
+					label: {
+						minWidth: 320,
+					},
+					value: {
+						width: '50%',
+						minWidth: 320,
+					},
+				},
+			},
+		},
+	};
+	const [ view, setView ] = useState( {
+		type: 'table',
+		search: '',
+		filters: [],
+		page: 1,
+		perPage: 10,
+		sort: { field: 'label', direction: 'asc' },
+		fields: [ 'label', 'value' ],
+		layout: defaultLayouts.table.layout,
+	} );
+	const fields = [
+		{
+			id: 'label',
+			label: __( 'Label' ),
+			type: 'text',
+			enableGlobalSearch: true,
+		},
+		{
+			id: 'value',
+			label: __( 'Value' ),
+			type: 'text',
+			enableGlobalSearch: true,
+		},
+	];
+	// TODO: Build the data array with the registered sources.
+	const data = [];
+	const { data: shownData, paginationInfo } = useMemo( () => {
+		return filterSortAndPaginate( data, view, fields );
+	}, [ view ] );
+	return (
+		<DataViews
+			getItemId={ ( item ) => item.id.toString() }
+			paginationInfo={ paginationInfo }
+			data={ shownData }
+			view={ view }
+			fields={ fields }
+			onChangeView={ setView }
+			// TODO: Check if we can use this in the table view.
+			onClickItem={ ( item ) => {
+				updateBlockBindings( {
+					[ attribute ]: {
+						source: item.source,
+						args: item.args,
+					},
+				} );
+			} }
+			isItemClickable={ () => true }
+			defaultLayouts={ defaultLayouts }
+		/>
+	);
 }
 
 function BlockBindingsAttribute( { attribute, binding, fieldsList } ) {
@@ -140,9 +206,8 @@ function EditableBlockBindingsPanelItems( {
 	fieldsList,
 } ) {
 	const { updateBlockBindings } = useBlockBindingsUtils();
-	const [ isOpen, setOpen ] = useState( false );
-	const openModal = () => setOpen( true );
-	const closeModal = () => setOpen( false );
+	const { clientId } = useBlockEditContext();
+	const [ modalData, setModalData ] = useState( null );
 	return (
 		<>
 			{ attributes.map( ( attribute ) => {
@@ -160,8 +225,7 @@ function EditableBlockBindingsPanelItems( {
 					>
 						<Item
 							onClick={ () => {
-								// TODO: Pass data with the binding and the block ID.
-								openModal();
+								setModalData( { clientId, attribute } );
 							} }
 						>
 							<BlockBindingsAttribute
@@ -173,13 +237,16 @@ function EditableBlockBindingsPanelItems( {
 					</ToolsPanelItem>
 				);
 			} ) }
-			{ isOpen && (
+			{ modalData && (
 				<Modal
-					onRequestClose={ closeModal }
+					onRequestClose={ () => setModalData( null ) }
 					__experimentalHideHeader
 					className="extending-block-bindings__modal"
 				>
-					<DataViewsModal />
+					<DataViewsModal
+						clientId={ modalData?.clientId }
+						attribute={ modalData?.attribute }
+					/>
 				</Modal>
 			) }
 		</>

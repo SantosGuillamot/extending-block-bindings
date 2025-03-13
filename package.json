@@ -11,10 +11,13 @@
 		"lint:php": "wp-env run --env-cwd='wp-content/plugins/woo-demo' cli composer run-script lint",
 		"wp-env": "wp-env"
 	},
+	"dependencies": {
+		"@wordpress/dataviews": "^4.15.0"
+	},
 	"devDependencies": {
 		"@wordpress/env": "^10.0.0",
 		"@wordpress/prettier-config": "^4.0.0",
-		"@wordpress/scripts": "^27.3.0",
+		"@wordpress/scripts": "^30.12.0",
 		"archiver": "^7.0.0",
 		"prettier": "npm:wp-prettier@3.0.3"
 	}
