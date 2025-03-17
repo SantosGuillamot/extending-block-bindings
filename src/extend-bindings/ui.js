@@ -34,6 +34,7 @@ import { __dangerousOptInToUnstableAPIsOnlyForCoreModules } from '@wordpress/pri
 const EMPTY_OBJECT = {};
 // TODO: Add proper opt-in mechanism.
 const BLOCK_BINDINGS_ALLOWED_BLOCKS = {
+	'ebb/test-static': [ 'content' ],
 	'core/image': [ 'url', 'caption', 'href' ],
 };
 /**
