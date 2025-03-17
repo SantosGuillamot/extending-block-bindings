@@ -86,13 +86,16 @@ const useToolsPanelDropdownMenuProps = () => {
 		: {};
 };
 
-function DataViewsModal( { clientId, attribute } ) {
+function DataViewsModal( { clientId, attribute, context } ) {
 	const { updateBlockBindings } = useBlockBindingsUtils( clientId );
 	const defaultLayouts = {
 		table: {
 			layout: {
-				primaryField: 'label',
+				primaryField: 'source',
 				styles: {
+					source: {
+						minWidth: 320,
+					},
 					label: {
 						minWidth: 320,
 					},
@@ -110,11 +113,17 @@ function DataViewsModal( { clientId, attribute } ) {
 		filters: [],
 		page: 1,
 		perPage: 10,
-		sort: { field: 'label', direction: 'asc' },
-		fields: [ 'label', 'value' ],
+		sort: { field: 'source', direction: 'asc' },
+		fields: [ 'source', 'label', 'value' ],
 		layout: defaultLayouts.table.layout,
 	} );
 	const fields = [
+		{
+			id: 'source',
+			label: __( 'Source' ),
+			type: 'text',
+			enableGlobalSearch: true,
+		},
 		{
 			id: 'label',
 			label: __( 'Label' ),
@@ -129,7 +138,38 @@ function DataViewsModal( { clientId, attribute } ) {
 		},
 	];
 	// TODO: Build the data array with the registered sources.
-	const data = [];
+	const { data } = useSelect(
+		( select ) => {
+			const _data = [];
+			const registeredSources = getBlockBindingsSources();
+			// Iterate through each source in the sources object
+			for ( const [ sourceName, sourceProps ] of Object.entries(
+				registeredSources
+			) ) {
+				if ( sourceProps.getFieldsList ) {
+					const sourceFields = sourceProps.getFieldsList( {
+						select,
+						context,
+					} );
+					for ( const [ fieldId, fieldProps ] of Object.entries(
+						sourceFields
+					) ) {
+						_data.push( {
+							id: sourceName + '// ' + fieldId,
+							source: registeredSources[ sourceName ].label,
+							label: fieldProps.label,
+							value: fieldProps.value,
+						} );
+					}
+				}
+			}
+
+			return {
+				data: _data,
+			};
+		},
+		[ context ]
+	);
 	const { data: shownData, paginationInfo } = useMemo( () => {
 		return filterSortAndPaginate( data, view, fields );
 	}, [ view ] );
@@ -200,6 +240,7 @@ function EditableBlockBindingsPanelItems( {
 	attributes,
 	bindings,
 	fieldsList,
+	context,
 } ) {
 	const { updateBlockBindings } = useBlockBindingsUtils();
 	const { clientId } = useBlockEditContext();
@@ -242,6 +283,7 @@ function EditableBlockBindingsPanelItems( {
 					<DataViewsModal
 						clientId={ modalData?.clientId }
 						attribute={ modalData?.attribute }
+						context={ context }
 					/>
 				</Modal>
 			) }
@@ -336,6 +378,7 @@ function BlockBindingsPanel( { name: blockName, attributes, context } ) {
 							attributes={ bindableAttributes }
 							bindings={ filteredBindings }
 							fieldsList={ fieldsList }
+							context={ context }
 						/>
 					) }
 				</ItemGroup>
