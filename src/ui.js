@@ -249,7 +249,8 @@ function EditableBlockBindingsPanelItems( {
 	);
 }
 
-function BlockBindingsPanel( { name: blockName, metadata, context } ) {
+function BlockBindingsPanel( { name: blockName, attributes, context } ) {
+	const { metadata } = attributes;
 	const { removeAllBlockBindings } = useBlockBindingsUtils();
 	const bindableAttributes = getBindableAttributes( blockName );
 	const dropdownMenuProps = useToolsPanelDropdownMenuProps();
