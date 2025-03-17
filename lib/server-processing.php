@@ -7,8 +7,9 @@ require 'html-api/class-ebb-html-processor.php';
 require 'html-api/class-ebb-css-selectors.php';
 
 $supported_block_attributes = array(
-	'ebb/test-static' => array( 'content' ),
-	'core/image'      => array( 'caption', 'href' ),
+	'ebb/test-static'  => array( 'content' ),
+	'ebb/test-dynamic' => array( 'content' ),
+	'core/image'       => array( 'caption', 'href' ),
 );
 
 /**

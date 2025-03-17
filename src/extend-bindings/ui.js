@@ -35,6 +35,7 @@ const EMPTY_OBJECT = {};
 // TODO: Add proper opt-in mechanism.
 const BLOCK_BINDINGS_ALLOWED_BLOCKS = {
 	'ebb/test-static': [ 'content' ],
+	'ebb/test-dynamic': [ 'content' ],
 	'core/image': [ 'url', 'caption', 'href' ],
 };
 /**

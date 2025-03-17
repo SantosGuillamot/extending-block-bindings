@@ -1,0 +1,23 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "ebb/test-dynamic",
+	"version": "0.1.0",
+	"title": "Test Dynamic",
+	"category": "widgets",
+	"icon": "smiley",
+	"description": "Block to test bindings in dynamic blocks.",
+	"example": {},
+	"attributes": {
+		"content": {
+			"type": "string",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false
+	},
+	"textdomain": "test-dynamic",
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}
