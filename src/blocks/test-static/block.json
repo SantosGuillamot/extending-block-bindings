@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "ebb/test-static",
+	"version": "0.1.0",
+	"title": "Test Static",
+	"category": "widgets",
+	"icon": "smiley",
+	"description": "Block to test bindings in static blocks.",
+	"example": {},
+	"attributes": {
+		"content": {
+			"type": "rich-text",
+			"source": "rich-text",
+			"selector": "p",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false
+	},
+	"textdomain": "test-static",
+	"editorScript": "file:./index.js"
+}

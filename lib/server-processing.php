@@ -7,7 +7,8 @@ require 'html-api/class-ebb-html-processor.php';
 require 'html-api/class-ebb-css-selectors.php';
 
 $supported_block_attributes = array(
-	'core/image' => array( 'caption', 'href' ),
+	'ebb/test-static' => array( 'content' ),
+	'core/image'      => array( 'caption', 'href' ),
 );
 
 /**
@@ -22,6 +23,9 @@ function ebb_extend_block_uses_context( $metadata ) {
 		if ( ! empty( $registered_sources ) ) {
 			foreach ( $registered_sources as $source ) {
 				if ( $source->uses_context ) {
+					if ( ! isset( $metadata['usesContext'] ) ) {
+						$metadata['usesContext'] = array();
+					}
 					$metadata['usesContext'] = array_unique( array_merge( $metadata['usesContext'], $source->uses_context ) );
 				}
 			}
