@@ -156,3 +156,15 @@ function ebb_update_static_blocks( $block_content, $parsed_block, $block ) {
 }
 add_filter( 'render_block', 'ebb_update_static_blocks', 10, 3 );
 
+function ebb_update_dynamic_blocks( $args ) {
+	if ( empty( $args['render_callback'] ) ) {
+		return $args;
+	}
+	 $args['render_callback'] = function ( $attributes, $content, $block ) use ( $args ) {
+		$computed_attributes = process_block_bindings( $block );
+		$updated_attributes  = array_merge( $attributes, $computed_attributes );
+		return $args['render_callback']( $updated_attributes, $content, $block );
+	 };
+	 return $args;
+}
+add_filter( 'register_block_type_args', 'ebb_update_dynamic_blocks' );
